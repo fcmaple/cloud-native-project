@@ -1,0 +1,9 @@
+version: '3'
+services:
+  server:
+    image: fast:v0.1
+    container_name: fastapi_server
+    hostname: server
+    restart: always
+    ports: 
+      - "8888:8888"
