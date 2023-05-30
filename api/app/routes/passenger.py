@@ -5,7 +5,8 @@ from fastapi import APIRouter, Depends, HTTPException, status, Response
 from ..models.user import UserIn
 from ..models.trip import ReservedTrip, ReservedIn
 from ..dependencies import get_current_user
-
+from ..db.crud import get_db
+from sqlalchemy.orm import Session
 router = APIRouter(
     prefix="/passenger",
     tags=["passenger"],
@@ -51,8 +52,29 @@ def read_reserved_trip_info(
 )
 def reserve_trip(
     query: ReservedIn,
-    userdata: Annotated[UserIn, Depends(get_current_user)]
+    user: Annotated[UserIn, Depends(get_current_user)],
+    db: Annotated[Session,Depends(get_db)],
 ):
+    cost = 1234
+    trip_status = db.get_data_trips(query.trip_id)
+    print(trip_status)
+    if trip_status[0]['available_seats'] <= 0:
+        return Response(status_code=status.HTTP_409_CONFLICT)
+    if isinstance(trip_status,str):
+        return Response(status_code=status.HTTP_404_NOT_FOUND)
+    dic = {
+        'trip_id' : query.trip_id,
+        'user_id' : user.user_id,
+        'departure' : query.departure,
+        'destination' : query.destination,
+        'cost':cost
+    }
+    _ = db.insert_data_passengers(dic)
+    for trip in trip_status:
+        trip['available_seats'] -= 1
+        dic = {'available_seats':trip['available_seats']}
+        db.update_data_trips(trip['trip_id'],dic)
+        print(trip)
     return Response(status_code=status.HTTP_201_CREATED)
 
 

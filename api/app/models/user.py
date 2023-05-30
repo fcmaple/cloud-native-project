@@ -21,3 +21,4 @@ class UserOut(BaseModel):
 
 class UserIn(UserOut):
     password: str
+    user_id: int
