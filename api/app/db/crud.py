@@ -1,6 +1,7 @@
 from sqlalchemy.orm import Session
 from .database import get_db_session
 from .models import users_table, trips_table, passengers_table, locations_table
+from typing import Annotated, List
 
 def get_db():
     _db = next(get_db_session())
@@ -103,12 +104,34 @@ class process_data():
             print(str(exc))
             return str(exc)
     
+    def get_data_trips_by_userid(self, id: int):
+        try:
+            data = self.db.query(trips_table).filter_by(user_id=id)
+            self.db.commit()
+            _dict = [d.__dict__ for d in data]
+            return "ERROR: input id not in table trips" if len(_dict) == 0 else _dict
+        except Exception as exc:
+            print(exc.__class__.__name__, end=": ")
+            print(str(exc))
+            return str(exc)
+
     def get_data_trips(self, id: int):
         try:
             data = self.db.query(trips_table).filter_by(trip_id=id)
             self.db.commit()
             _dict = [d.__dict__ for d in data]
             return "ERROR: input id not in table trips" if len(_dict) == 0 else _dict
+        except Exception as exc:
+            print(exc.__class__.__name__, end=": ")
+            print(str(exc))
+            return str(exc)
+        
+    def get_data_passengers_userid(self, id: int):
+        try:
+            data = self.db.query(passengers_table).filter_by(user_id=id)
+            self.db.commit()
+            _dict = [d.__dict__ for d in data]
+            return "ERROR: input id not in table passengers" if len(_dict) == 0 else _dict
         except Exception as exc:
             print(exc.__class__.__name__, end=": ")
             print(str(exc))
@@ -125,10 +148,24 @@ class process_data():
             print(str(exc))
             return str(exc)
         
+    def get_data_locations_info_by_name(self, _name: str, _id: Annotated[int,None] = None):
+        try:
+            if _id == None:
+                data = self.db.query(locations_table).filter_by(name=_name)
+                self.db.commit()
+            else:
+                data = self.db.query(locations_table).filter_by(name=_name, trip_id=_id)
+                self.db.commit()
+            _dict = [d.__dict__ for d in data]
+            return "ERROR: input id not in table trips" if len(_dict) == 0 else _dict
+        except Exception as exc:
+            print(exc.__class__.__name__, end=": ")
+            print(str(exc))
+            return str(exc)
+        
     def get_data_locationsid(self, id: int, _name: str):
         try:
-            data = self.db.query(passengers_table).filter_by(trip_id=id, name=_name)
-            print(data)
+            data = self.db.query(locations_table).filter_by(trip_id=id, name=_name)
             self.db.commit()
             _dict = [d.__dict__ for d in data]
             return "ERROR: input id not in table trips" if len(_dict) == 0 else _dict[0]
@@ -210,17 +247,27 @@ class process_data():
         try:
             res = self.db.query(trips_table).filter_by(trip_id=id).delete()
             self.db.commit()
-            return "SUCCESS" if res == 1 else "ERROR"
+            return "SUCCESS" if res >= 0 else "ERROR"
+        except Exception as exc:
+            print(exc.__class__.__name__, end=": ")
+            print(str(exc))
+            return str(exc)
+        
+    def delete_data_passengers(self, _trip_id: int) -> str:
+        try:
+            res = self.db.query(passengers_table).filter_by(trip_id=_trip_id).delete()
+            self.db.commit()
+            return "SUCCESS" if res >= 0 else "ERROR"
         except Exception as exc:
             print(exc.__class__.__name__, end=": ")
             print(str(exc))
             return str(exc)
 
-    def delete_data_passengers(self, id: int) -> str:
+    def delete_data_passengers_by_trip_user_id(self, _trip_id: int, _user_id: int) -> str:
         try:
-            res = self.db.query(passengers_table).filter_by(passenger_id=id).delete()
+            res = self.db.query(passengers_table).filter_by(trip_id=_trip_id, user_id=_user_id).delete()
             self.db.commit()
-            return "SUCCESS" if res == 1 else "ERROR"
+            return "SUCCESS" if res >= 0 else "ERROR"
         except Exception as exc:
             print(exc.__class__.__name__, end=": ")
             print(str(exc))
@@ -228,9 +275,13 @@ class process_data():
         
     def delete_data_locations(self, id: int) -> str:
         try:
-            res = self.db.query(locations_table).filter_by(location_id=id).delete()
+            res = self.db.query(locations_table).filter_by(trip_id=id).delete()
+            print('-'*20)
+            print(res)
+            print('-'*20)
+
             self.db.commit()
-            return "SUCCESS" if res == 1 else "ERROR"
+            return "SUCCESS" if res >= 0  else "ERROR"
         except Exception as exc:
             print(exc.__class__.__name__, end=": ")
             print(str(exc))

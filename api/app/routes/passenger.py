@@ -7,6 +7,7 @@ from ..models.trip import ReservedTrip, ReservedIn
 from ..dependencies import get_current_user
 from ..db.crud import get_db
 from sqlalchemy.orm import Session
+from datetime import datetime
 router = APIRouter(
     prefix="/passenger",
     tags=["passenger"],
@@ -22,23 +23,33 @@ router = APIRouter(
     response_model=List[ReservedTrip]
 )
 def read_reserved_trip_info(
-    userdata: Annotated[UserIn, Depends(get_current_user)]
+    user: Annotated[UserIn, Depends(get_current_user)],
+    db: Annotated[Session,Depends(get_db)],
 ):
-    info = {
-            "trip_id": 123,
-            "driver_name": "Dave",
-            "departure": {
-                "location": "NYCU",
-                "time": "2023/6/1 17:00",
+    res = []
+    trip_for_user = db.get_data_passengers_userid(user.user_id)
+    for trip in trip_for_user:
+        trip_info = db.get_data_trips(trip['trip_id'])[0]
+        driver_info = db.get_data_users_byid(trip_info['user_id'])
+        departure_info = db.get_data_locationsid(trip['trip_id'], trip['departure'])
+        destination_info = db.get_data_locationsid(trip['trip_id'], trip['destination'])
+        single_trip = {
+            'trip_id' : trip['trip_id'],
+            'driver_name' : driver_info['username'],
+            'departure' : {
+                'location' : trip['departure'], 
+                'time' : datetime.strftime(departure_info['time'], '%Y-%m-%d %H:%M:%S'),
             },
-            "destination": {
-                "location": "TSMC",
-                "time": "2023/6/1 18:00",
+            'destination' : {
+                "location":trip['destination'],
+                'time':datetime.strftime(destination_info['time'],'%Y-%m-%d %H:%M:%S'),
             },
-            "payment" : 120,
-            "available_seats": 4,
+            'payment' : trip['cost'],
+            'available_seats' : trip_info['available_seats'],
         }
-    return [info, info]
+       
+        res.append(single_trip)
+    return res
 
 
 @router.post(
@@ -72,9 +83,10 @@ def reserve_trip(
     _ = db.insert_data_passengers(dic)
     for trip in trip_status:
         trip['available_seats'] -= 1
-        dic = {'available_seats':trip['available_seats']}
+        dic = { 
+            'available_seats' : trip['available_seats']
+        }
         db.update_data_trips(trip['trip_id'],dic)
-        print(trip)
     return Response(status_code=status.HTTP_201_CREATED)
 
 
@@ -82,11 +94,16 @@ def reserve_trip(
     "/trip/{trip_id}",
     responses={
         status.HTTP_200_OK: {"content": None},
-        status.HTTP_404_NOT_FOUND: {"description": "There is no such trip."},
+        status.HTTP_404_NOT_FOUND: {"description": "There is no such trip or passenger in db."},
     }
 )
 def remove_reserved_trip(
     trip_id: int,
-    _: Annotated[UserIn, Depends(get_current_user)]
+    user: Annotated[UserIn, Depends(get_current_user)],
+    db: Annotated[Session,Depends(get_db)],
 ): 
+
+    delete_info = db.delete_data_passengers_by_trip_user_id(trip_id, user.user_id)
+    if delete_info != "SUCCESS":
+        return Response(status_code=status.HTTP_404_NOT_FOUND)
     return Response(status_code=status.HTTP_200_OK)

@@ -31,5 +31,7 @@ class NewTrip(BaseModel):
 class FullTrip(BaseModel):
     trip_id: int
     driver_name: str
-    path: List[PosTime]
+    # path: List[PosTime]
+    departure: PosTime
+    destination: PosTime
     available_seats: int

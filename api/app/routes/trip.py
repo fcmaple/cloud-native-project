@@ -5,7 +5,9 @@ from fastapi import APIRouter, Depends, HTTPException, status
 from ..models.trip import ReservedTrip
 from ..models.user import UserIn
 from ..dependencies import get_current_user
-
+from ..db.crud import get_db
+from sqlalchemy.orm import Session
+from datetime import datetime
 router = APIRouter(
     prefix="/trip",
     tags=["trip"],
@@ -24,20 +26,26 @@ def search_trips(
     departure: str,
     destination: str,
     boarding_time: str,
-    _: Annotated[UserIn, Depends(get_current_user)]
+    user: Annotated[UserIn, Depends(get_current_user)],
+    db: Annotated[Session,Depends(get_db)],
 ):
-    info = {
-        "trip_id" : 12,
-        "driver_name":"Dave",
-        "departure":{
-            "location" : departure,
-            "time" : "2023/6/1 18:00",
-        },
-        "destination":{
-            "location" : destination,
-            "time" : "2023/6/1 19:00",
-        },
-        "payment" : 120,
-        "available_seats": 4,
-    }
-    return [info,info]
+    res = []
+    departure_info = db.get_data_locations_info_by_name(departure)
+    for trip in departure_info:
+        single_trip = dict()
+        single_trip['trip_id'] = trip['trip_id']
+        destination_info = db.get_data_locations_info_by_name(destination, trip['trip_id'])
+        if isinstance(destination_info, str):
+            continue
+        single_trip['departure'] = {'location': departure, 'time': datetime.strftime(trip['time'],'%Y-%m-%d %H:%M:%S')}
+        if single_trip['departure']['time'] < datetime.strftime(datetime.now(),'%Y-%m-%d %H:%M:%S'):
+            continue
+        single_trip['destination'] = {'location': destination, 'time': datetime.strftime(destination_info[0]['time'],'%Y-%m-%d %H:%M:%S')}
+        single_trip['payment'] = 100
+        _trip_info = db.get_data_trips(trip['trip_id'])[0]
+        _user_info = db.get_data_users_byid(_trip_info['user_id'])
+        single_trip['available_seats'] = _trip_info['available_seats']
+        single_trip['driver_name'] = _user_info['username']
+        res.append(single_trip)
+    
+    return res
