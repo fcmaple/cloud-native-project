@@ -1,0 +1,11 @@
+version: '2'
+
+services:
+  db:
+    build: .
+    restart: unless-stopped
+    tty: true
+    container_name: cloud_postgresql
+    privileged: true
+    ports:
+      - "5432:5432"
