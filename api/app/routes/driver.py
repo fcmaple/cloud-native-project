@@ -124,12 +124,12 @@ def new_trip(
         'available_seats' : query.available_seats,
         'boarding_time' : query.boarding_time
     }
-    res = db.insert_data_trips(req)
-    trip_id = db.get_data_tripid(req)
-    if not isinstance(res,str):
-        return Response(status_code=status.HTTP_405_METHOD_NOT_ALLOWED)
     if query.path == [] or '' in query.path:
         return Response(status_code=status.HTTP_406_NOT_ACCEPTABLE)
+    res = db.insert_data_trips(req)
+    if not isinstance(res,str):
+        return Response(status_code=status.HTTP_405_METHOD_NOT_ALLOWED)
+    trip_id = db.get_data_tripid(req)
     for idx,p in enumerate(query.path):
         req = {
             'trip_id' : trip_id['trip_id'],

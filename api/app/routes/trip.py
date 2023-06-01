@@ -31,6 +31,8 @@ def search_trips(
 ):
     res = []
     departure_info = db.get_data_locations_info_by_name(departure)
+    if isinstance(departure_info,str):
+        return res
     for trip in departure_info:
         single_trip = dict()
         single_trip['trip_id'] = trip['trip_id']
@@ -58,6 +60,5 @@ def search_trips(
             raise HTTPException(
                 status_code=status.HTTP_409_CONFLICT,
                 detail=f"boarding_time invalid type , ex: 2023-05-01T08:51:41")
-        
-    
+
     return res
