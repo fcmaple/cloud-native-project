@@ -1,0 +1,19 @@
+version: '2'
+
+services:
+  server:
+    image: fast:v0.2.2
+    container_name: fastapi_server
+    restart: always
+    ports:
+      - "8888:8888"
+  db:
+    image: psqldb:v0.1.0
+    restart: unless-stopped
+    container_name: cloud_postgresql
+    volumes:
+      - db_volume: /var/lib/postgresql/data
+    ports:
+      - "5432:5432"
+volumes:
+  db_volume:

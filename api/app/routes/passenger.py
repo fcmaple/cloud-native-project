@@ -3,10 +3,9 @@ from typing import Annotated, List
 from fastapi import APIRouter, Depends, HTTPException, status, Response
 
 from ..models.user import UserIn
-from ..models.trip import ReservedTrip, ReservedIn
+from ..models.trip import ReservedTrip, ReservedIn , calPayment
 from ..dependencies import get_current_user
 from ..db.crud import get_db
-from ..config import cal_payment
 
 from sqlalchemy.orm import Session
 from datetime import datetime
@@ -83,7 +82,7 @@ def reserve_trip(
         'user_id' : user.user_id,
         'departure' : query.departure,
         'destination' : query.destination,
-        'cost': cal_payment(dif_location)
+        'cost': calPayment(dif_location)
     }
     _ = db.insert_data_passengers(dic)
     for trip in trip_status:

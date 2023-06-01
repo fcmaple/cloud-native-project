@@ -2,6 +2,8 @@ from typing import List
 from datetime import datetime
 from pydantic import BaseModel
 
+def calPayment(distance:int):
+    return 10*distance
 
 class PosTime(BaseModel):
     location: str

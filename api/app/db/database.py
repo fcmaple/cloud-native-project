@@ -1,9 +1,9 @@
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker,declarative_base
 
-SQLALCHEMY_DATABASE_URL = "postgresql://cloud:cloud@140.113.213.50:5432/cloudb"
+from ..config import settings
 
-engine = create_engine(SQLALCHEMY_DATABASE_URL, echo=True)
+engine = create_engine(settings.SQLALCHEMY_DATABASE_URL, echo=True)
 SessionLocal = sessionmaker(autocommit=False, autoflush=True, bind=engine)
 db = SessionLocal()
 

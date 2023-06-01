@@ -2,10 +2,9 @@ from typing import Annotated, List
 
 from fastapi import APIRouter, Depends, HTTPException, status
 
-from ..models.trip import ReservedTrip
+from ..models.trip import ReservedTrip,calPayment
 from ..models.user import UserIn
 from ..dependencies import get_current_user
-from ..config import cal_payment
 from ..db.crud import get_db
 from sqlalchemy.orm import Session
 from datetime import datetime
@@ -50,7 +49,7 @@ def search_trips(
                     'time': destination_info[0]['time']
                 }
                 dif_location = destination_info[0]['location_id']-trip['location_id']
-                single_trip['payment'] = cal_payment(dif_location)
+                single_trip['payment'] = calPayment(dif_location)
                 _trip_info = db.get_data_trips(trip['trip_id'])[0]
                 _user_info = db.get_data_users_byid(_trip_info['user_id'])
                 single_trip['available_seats'] = _trip_info['available_seats']
