@@ -15,10 +15,10 @@ def test_search_trips(oauth_header):
     response = client.get(url=url,headers=oauth_header,params=body)
     assert response.status_code == status.HTTP_200_OK
     for trip in response.json():
-        assert type(trip["trip_id"]) == int
+        assert isinstance(trip["trip_id"],int) 
         pytest.trip_id = trip["trip_id"]
-        assert type(trip["driver_name"]) == str
-        assert type(trip["departure"]["location"]) == str and type(trip["departure"]["time"]) == str
-        assert type(trip["destination"]["location"]) == str and type(trip["destination"]["time"]) == str
-        assert type(trip["payment"]) == int
-        assert type(trip["available_seats"]) == int
+        assert isinstance(trip["driver_name"],str)
+        assert isinstance(trip["departure"]["location"],str) and isinstance(trip["departure"]["time"],str)
+        assert isinstance(trip["destination"]["location"],str) and isinstance(trip["destination"]["time"],str) 
+        assert isinstance(trip["payment"],int) 
+        assert isinstance(trip["available_seats"],int)

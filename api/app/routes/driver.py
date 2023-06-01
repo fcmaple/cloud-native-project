@@ -1,14 +1,15 @@
 from typing import Annotated, List
-from datetime import datetime
+from datetime import datetime , timedelta
 from fastapi import APIRouter, Depends, HTTPException, status, Response
 from pydantic import BaseModel
 
 from ..models.user import UserIn
 from ..models.trip import FullTrip, PosTime, NewTrip
 from ..dependencies import get_current_user
-
+from ..config import settings
 from ..db.crud import get_db
 from sqlalchemy.orm import Session
+import sqlalchemy
 
 router = APIRouter(
     prefix="/driver",
@@ -24,6 +25,10 @@ router = APIRouter(
 @router.get(
     "/trip",
     response_model=List[FullTrip],
+    responses={
+        status.HTTP_200_OK: {"context": None},
+    }
+
 )
 def read_trip_info(
     user: Annotated[UserIn, Depends(get_current_user)],
@@ -31,6 +36,8 @@ def read_trip_info(
 ):
     ret = db.get_data_trips_by_userid(user.user_id)
     trips = []
+    if isinstance(ret,str):
+        return trips
     for trip in ret:
         print(trip)
         single_trip = {
@@ -39,16 +46,15 @@ def read_trip_info(
             'available_seats' : trip['available_seats'],
             'departure' : {
                 'location':trip['departure'],
-                'time':datetime.strftime(trip['boarding_time'],'%Y-%m-%d %H:%M:%S'),
+                'time': trip['boarding_time'],
             },
             'destination' : {
                 'location':trip['destination'],
-                'time':datetime.strftime(trip['boarding_time'],'%Y-%m-%d %H:%M:%S'),
+                'time':  trip['alighting_time'],
             }
         }
         trips.append(single_trip)
     return sorted(trips,key=lambda x:x['trip_id'])
-    return trips
 
 class ReservedLocation(BaseModel):
     point: PosTime
@@ -60,6 +66,7 @@ class ReservedLocation(BaseModel):
     "/trip/{trip_id}",
     response_model=List[ReservedLocation],
     responses={
+        status.HTTP_200_OK: {"context": None},
         status.HTTP_404_NOT_FOUND: {"description": "There is no such trip."},
     }
 )
@@ -73,13 +80,12 @@ def read_reserved_trip_info(
         return Response(status_code=status.HTTP_404_NOT_FOUND)
     passengers = db.get_data_passengers(trip_id)
 
-    # name : str , time : str , trip_id
     info = []
     for location in locations:
         dic = {
             'point':  {
                 'location' : location['name'],
-                'time' : datetime.strftime(location["time"],'%Y-%m-%d %H:%M:%S')
+                'time' : location["time"],
             },
             'boarding' : [],
             'Alighting' : []
@@ -103,7 +109,8 @@ def read_reserved_trip_info(
     responses={
         status.HTTP_201_CREATED: {"description": "new trip is created"},
         status.HTTP_500_INTERNAL_SERVER_ERROR: {"description": "API or Database Server Error"},
-        status.HTTP_406_NOT_ACCEPTABLE: {"description": "Invalid parameters"}
+        status.HTTP_406_NOT_ACCEPTABLE: {"description": "Invalid parameters"},
+        status.HTTP_405_METHOD_NOT_ALLOWED: {"description": "USER_ID or BOARDING_TIME already exists"}
     }
 )
 def new_trip(
@@ -112,7 +119,6 @@ def new_trip(
     db: Annotated[Session,Depends(get_db)],
 ):
     #2011-11-04T00:05:23
-    query.boarding_time = datetime.fromisoformat(query.boarding_time)
     req = {
         'user_id' : user.user_id,
         'available_seats' : query.available_seats,
@@ -120,15 +126,15 @@ def new_trip(
     }
     res = db.insert_data_trips(req)
     trip_id = db.get_data_tripid(req)
-    if res != "SUCCESS":
-        return Response(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR)
-    if query.path == []:
+    if not isinstance(res,str):
+        return Response(status_code=status.HTTP_405_METHOD_NOT_ALLOWED)
+    if query.path == [] or '' in query.path:
         return Response(status_code=status.HTTP_406_NOT_ACCEPTABLE)
-    for p in query.path:
+    for idx,p in enumerate(query.path):
         req = {
             'trip_id' : trip_id['trip_id'],
             'name' : p,
-            'time' : query.boarding_time
+            'time' : query.boarding_time + timedelta(minutes=settings.POINT_MINUTES*idx)
         }
         db.insert_data_locations(req)
     first_location = db.get_data_locationsid(trip_id['trip_id'],query.path[0]) 
@@ -136,7 +142,9 @@ def new_trip(
     dic = {
         'departure' : first_location['location_id'],
         'destination' : last_location['location_id'],
+        'alighting_time' : last_location['time'],
     }
+    # need update the alighting time
     db.update_data_trips(trip_id['trip_id'],dic)
 
     return Response(status_code=status.HTTP_201_CREATED)

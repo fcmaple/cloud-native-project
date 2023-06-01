@@ -44,7 +44,7 @@ class process_data():
         except Exception as exc:
             print(exc.__class__.__name__, end=": ")
             print(str(exc))
-            return str(exc)
+            return type(exc)
         
     def insert_data_passengers(self, input_data: dict) -> str:
         try:

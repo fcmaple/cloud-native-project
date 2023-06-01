@@ -28,6 +28,8 @@ class trips_table(Base):
     # renew search (seats)
     # time format - '05/25/2023 17:56:00'
     boarding_time = Column(TIMESTAMP, default=datetime.utcnow)
+    alighting_time = Column(TIMESTAMP)
+    
 
     
     def __str__(self):

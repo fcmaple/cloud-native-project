@@ -27,7 +27,7 @@ def test_read_user_info(oauth_header):
     response = client.get(url=url,headers=oauth_header)
     assert response.status_code == status.HTTP_200_OK
     info = response.json()
-    assert type(info["username"]) == str
-    assert type(info["realname"]) == str
-    assert type(info["phone"]) == str
-    assert type(info["car"]) == str
+    assert isinstance(info["username"],str) 
+    assert isinstance(info["realname"],str) 
+    assert isinstance(info["phone"],str)
+    assert isinstance(info["car"],str)

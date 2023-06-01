@@ -6,6 +6,8 @@ from ..models.user import UserIn
 from ..models.trip import ReservedTrip, ReservedIn
 from ..dependencies import get_current_user
 from ..db.crud import get_db
+from ..config import cal_payment
+
 from sqlalchemy.orm import Session
 from datetime import datetime
 router = APIRouter(
@@ -28,6 +30,8 @@ def read_reserved_trip_info(
 ):
     res = []
     trip_for_user = db.get_data_passengers_userid(user.user_id)
+    if isinstance(trip_for_user,str):
+        return res
     for trip in trip_for_user:
         trip_info = db.get_data_trips(trip['trip_id'])[0]
         driver_info = db.get_data_users_byid(trip_info['user_id'])
@@ -38,11 +42,11 @@ def read_reserved_trip_info(
             'driver_name' : driver_info['username'],
             'departure' : {
                 'location' : trip['departure'], 
-                'time' : datetime.strftime(departure_info['time'], '%Y-%m-%d %H:%M:%S'),
+                'time' : departure_info['time'],
             },
             'destination' : {
                 "location":trip['destination'],
-                'time':datetime.strftime(destination_info['time'],'%Y-%m-%d %H:%M:%S'),
+                'time':destination_info['time'],
             },
             'payment' : trip['cost'],
             'available_seats' : trip_info['available_seats'],
@@ -66,19 +70,20 @@ def reserve_trip(
     user: Annotated[UserIn, Depends(get_current_user)],
     db: Annotated[Session,Depends(get_db)],
 ):
-    cost = 1234
     trip_status = db.get_data_trips(query.trip_id)
-    print(trip_status)
     if trip_status[0]['available_seats'] <= 0:
         return Response(status_code=status.HTTP_409_CONFLICT)
     if isinstance(trip_status,str):
         return Response(status_code=status.HTTP_404_NOT_FOUND)
+    first_location = db.get_data_locationsid(query.trip_id,query.departure) 
+    last_location = db.get_data_locationsid(query.trip_id,query.destination)
+    dif_location = last_location['location_id']-first_location['location_id']
     dic = {
         'trip_id' : query.trip_id,
         'user_id' : user.user_id,
         'departure' : query.departure,
         'destination' : query.destination,
-        'cost':cost
+        'cost': cal_payment(dif_location)
     }
     _ = db.insert_data_passengers(dic)
     for trip in trip_status:
