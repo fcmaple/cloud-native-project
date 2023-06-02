@@ -29,8 +29,7 @@ class trips_table(Base):
     # time format - '05/25/2023 17:56:00'
     boarding_time = Column(TIMESTAMP, default=datetime.utcnow)
     alighting_time = Column(TIMESTAMP)
-    
-
+    position = Column(String)
     
     def __str__(self):
         return f"trips<trip_id={self.trip_id}, user_id={self.user_id}, path={self.path}, available_seats={self.available_seats}, broading_time={self.broading_time}>"

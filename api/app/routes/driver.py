@@ -9,7 +9,6 @@ from ..dependencies import get_current_user
 from ..config import settings
 from ..db.crud import get_db
 from sqlalchemy.orm import Session
-import sqlalchemy
 
 router = APIRouter(
     prefix="/driver",
@@ -19,8 +18,6 @@ router = APIRouter(
         status.HTTP_500_INTERNAL_SERVER_ERROR: {"description": "API or Database Server Error"}
     }
 )
-
-
 
 @router.get(
     "/trip",
@@ -39,17 +36,17 @@ def read_trip_info(
     if isinstance(ret,str):
         return trips
     for trip in ret:
-        print(trip)
+        # print(trip)
         single_trip = {
-            'trip_id' : trip['trip_id'],
-            'driver_name' : user.username,
-            'available_seats' : trip['available_seats'],
-            'departure' : {
-                'location':trip['departure'],
+            'trip_id': trip['trip_id'],
+            'driver_name': user.username,
+            'available_seats': trip['available_seats'],
+            'departure': {
+                'location': trip['departure'],
                 'time': trip['boarding_time'],
             },
-            'destination' : {
-                'location':trip['destination'],
+            'destination': {
+                'location': trip['destination'],
                 'time':  trip['alighting_time'],
             }
         }
@@ -88,7 +85,7 @@ def read_reserved_trip_info(
                 'time' : location["time"],
             },
             'boarding' : [],
-            'Alighting' : []
+            'Alighting' : [],
         }
         if isinstance(passengers,str):
             info.append(dic)
@@ -101,8 +98,26 @@ def read_reserved_trip_info(
                 dic["Alighting"].append(data['username'])
         info.append(dic)
     return info
+@router.put(
+    "/trip/position",
+    responses = {
+        status.HTTP_404_NOT_FOUND: {"description": "The trip is no exist"},
+    }
+)
+def update_trip_position(
+    trip_id: int,
+    position: str,
+    user: Annotated[UserIn, Depends(get_current_user)],
+    db: Annotated[Session,Depends(get_db)],
+):
+    req = {
+        'position' : position
+    }
 
-
+    if db.update_data_trips(trip_id,req) != 'SUCCESS':
+        return Response(status_code=status.HTTP_404_NOT_FOUND)
+    return Response(status_code=status.HTTP_200_OK)
+    
 @router.post(
     "/trip",
     status_code=status.HTTP_201_CREATED,
@@ -118,7 +133,6 @@ def new_trip(
     user: Annotated[UserIn, Depends(get_current_user)],
     db: Annotated[Session,Depends(get_db)],
 ):
-    #2011-11-04T00:05:23
     req = {
         'user_id' : user.user_id,
         'available_seats' : query.available_seats,
@@ -144,7 +158,6 @@ def new_trip(
         'destination' : last_location['location_id'],
         'alighting_time' : last_location['time'],
     }
-    # need update the alighting time
     db.update_data_trips(trip_id['trip_id'],dic)
 
     return Response(status_code=status.HTTP_201_CREATED)

@@ -4,15 +4,12 @@ from typing import Annotated
 from fastapi import APIRouter, Depends, HTTPException, status, Response
 from fastapi.security import OAuth2PasswordRequestForm
 
-from ..models.user import UserOut, UserIn, Token
-# from ..db import fake_users_db
+from ..models.user import UserOut, UserIn, UserLogin, Token
 from ..dependencies import get_current_user, authenticate_user
 from ..security import create_access_token, hashing_password
 from ..config import settings
 
 from sqlalchemy.orm import Session
-# from ..db.database import get_db_session
-# from ..db.crud import process_data
 from ..db.crud import get_db
 
 router = APIRouter(
@@ -22,14 +19,6 @@ router = APIRouter(
         status.HTTP_500_INTERNAL_SERVER_ERROR: {"description": "API or Database Server Error"}
     }
 )
-
-# def get_db():
-#     _db = next(get_db_session())
-#     try:
-#         yield process_data(_db)
-#     finally:
-#         _db.close()
-
 
 @router.get(
     "",
@@ -53,7 +42,7 @@ def read_user_info(
     }
 )
 def register_user(
-    userdata: UserIn,
+    userdata: UserLogin,
     db: Annotated[Session,Depends(get_db)],
 ):
     # if userdata.username in fake_users_db:
@@ -63,8 +52,7 @@ def register_user(
 
     userdata.password = hashing_password(userdata.password)
     user = userdata.dict()
-    del user["user_id"]
-    a = db.insert_data_users(user)
+    db.insert_data_users(user)
 
     return Response(status_code=status.HTTP_201_CREATED)
 

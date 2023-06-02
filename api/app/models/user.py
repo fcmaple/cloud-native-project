@@ -18,7 +18,9 @@ class UserOut(BaseModel):
     phone: str
     car: Union[str , None] = None
 
-
-class UserIn(UserOut):
+class UserLogin(UserOut):
     password: str
+    
+class UserIn(UserLogin):
     user_id: int
+

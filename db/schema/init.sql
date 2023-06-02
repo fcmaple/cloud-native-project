@@ -17,6 +17,7 @@ CREATE TABLE trips (
   boarding_time TIMESTAMP NOT NULL,
   alighting_time TIMESTAMP,
   available_seats INT NOT NULL,
+  position VARCHAR(300),
   UNIQUE (user_id, boarding_time)
 );
 

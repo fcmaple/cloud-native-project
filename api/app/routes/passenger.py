@@ -17,7 +17,27 @@ router = APIRouter(
         status.HTTP_500_INTERNAL_SERVER_ERROR: {"description": "API or Database Server Error"}
     }
 )
-
+@router.get(
+    "/trip/position",
+    status_code=status.HTTP_200_OK,
+    responses = {
+        status.HTTP_200_OK: {"context":None},
+        status.HTTP_404_NOT_FOUND: {"description": "The trip is no exist"},
+    }
+)
+def read_trip_position(
+    trip_id:int,
+    user: Annotated[UserIn, Depends(get_current_user)],
+    db: Annotated[Session,Depends(get_db)],
+):
+    trips = db.get_data_trips(trip_id)
+    if isinstance(trips,str):
+        return Response(status_code=status.HTTP_404_NOT_FOUND)
+    position = trips[0]['position']
+    req = {
+        'position': position if position is not None else '', 
+    }
+    return req
 
 @router.get(
     "/trip",

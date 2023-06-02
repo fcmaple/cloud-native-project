@@ -27,7 +27,14 @@ def test_reserved_trip_info(oauth_header):
         assert isinstance(trip["destination"]["location"],str)  and isinstance(trip["destination"]["time"],str)
         assert isinstance(trip["payment"],int)
         assert isinstance(trip["available_seats"],int) 
-
+def test_driver_position(oauth_header):
+    url = "/passenger/trip/position"
+    body = {
+        "trip_id" : pytest.trip_id,
+    }
+    response = client.get(url=url,headers=oauth_header,params=body)
+    assert response.status_code == status.HTTP_200_OK
+    assert isinstance(response.json()['position'],str)
 def test_remove_reserved_trip(oauth_header):
     url = f"/passenger/trip/{pytest.trip_id}"
 
