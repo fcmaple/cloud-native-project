@@ -1,25 +1,31 @@
 from typing import Annotated, List
+import json
 
 from fastapi import APIRouter, Depends, HTTPException, status
 
-from ..models.trip import ReservedTrip,calPayment
+from ..models.trip import ReservedTrip, calPayment, mapData
 from ..models.user import UserIn
 from ..dependencies import get_current_user
 from ..db.crud import get_db
 from sqlalchemy.orm import Session
 from datetime import datetime
+
+
 router = APIRouter(
     prefix="/trip",
     tags=["trip"],
     responses={
         status.HTTP_401_UNAUTHORIZED: {"description": "Could not validate credentials"},
         status.HTTP_500_INTERNAL_SERVER_ERROR: {"description": "API or Database Server Error"},
-        status.HTTP_409_CONFLICT: {"description": "BOARDING_TIME invalid type"}
+        
     }
 )
 @router.get(
     "",
     response_model=List[ReservedTrip],
+    responses={
+        status.HTTP_409_CONFLICT: {"description": "BOARDING_TIME invalid type"}
+    }
 )
 def search_trips(
     departure: str,
@@ -59,5 +65,18 @@ def search_trips(
             raise HTTPException(
                 status_code=status.HTTP_409_CONFLICT,
                 detail=f"boarding_time invalid type , ex: 2023-05-01T08:51:41")
+
+    return res
+
+
+@router.get(
+    "/maps",
+    response_model=List[mapData],
+)
+def get_maps(
+    user: Annotated[UserIn, Depends(get_current_user)],
+):
+    with open('app/map.json', 'r') as f:
+        res = json.load(f)
 
     return res

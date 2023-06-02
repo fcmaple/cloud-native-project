@@ -36,3 +36,8 @@ class FullTrip(BaseModel):
     departure: PosTime
     destination: PosTime
     available_seats: int
+
+class mapData(BaseModel):
+    location: str
+    lat: float
+    lng: float
