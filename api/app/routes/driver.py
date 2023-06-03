@@ -36,7 +36,7 @@ def read_trip_info(
     if isinstance(ret,str):
         return trips
     for trip in ret:
-        # print(trip)
+        print(trip)
         single_trip = {
             'trip_id': trip['trip_id'],
             'driver_name': user.username,
@@ -153,11 +153,14 @@ def new_trip(
         db.insert_data_locations(req)
     first_location = db.get_data_locationsid(trip_id['trip_id'],query.path[0]) 
     last_location = db.get_data_locationsid(trip_id['trip_id'],query.path[-1])
+
+
     dic = {
-        'departure' : first_location['location_id'],
-        'destination' : last_location['location_id'],
+        'departure' : first_location['name'],
+        'destination' : last_location['name'],
         'alighting_time' : last_location['time'],
     }
+    print(dict)
     db.update_data_trips(trip_id['trip_id'],dic)
 
     return Response(status_code=status.HTTP_201_CREATED)

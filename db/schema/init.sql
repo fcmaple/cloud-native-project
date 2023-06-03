@@ -12,8 +12,8 @@ CREATE TABLE users (
 CREATE TABLE trips (
   trip_id SERIAL PRIMARY KEY,
   user_id INT REFERENCES users(user_id),
-  departure INT,
-  destination INT,
+  departure VARCHAR(300),
+  destination VARCHAR(300),
   boarding_time TIMESTAMP NOT NULL,
   alighting_time TIMESTAMP,
   available_seats INT NOT NULL,

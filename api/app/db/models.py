@@ -22,8 +22,10 @@ class trips_table(Base):
 
     trip_id = Column(Integer, primary_key=True, autoincrement=True)
     user_id = Column(Integer, ForeignKey("users.user_id"))
-    departure = Column(Integer)
-    destination = Column(Integer)
+    # departure = Column(Integer)
+    departure = Column(String)
+    # destination = Column(Integer)
+    destination = Column(String)
     available_seats = Column(Integer, nullable=False)
     # renew search (seats)
     # time format - '05/25/2023 17:56:00'
