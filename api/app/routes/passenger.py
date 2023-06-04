@@ -1,5 +1,5 @@
 from typing import Annotated, List
-
+import logging
 from fastapi import APIRouter, Depends, HTTPException, status, Response
 
 from ..models.user import UserIn
@@ -21,8 +21,8 @@ router = APIRouter(
     "/trip/position",
     status_code=status.HTTP_200_OK,
     responses = {
-        status.HTTP_200_OK: {"context":None},
-        status.HTTP_404_NOT_FOUND: {"description": "The trip is no exist"},
+        status.HTTP_200_OK: {"context": None},
+        status.HTTP_404_NOT_FOUND: {"description": "The trip is no exist."},
     }
 )
 def read_trip_position(
@@ -32,11 +32,13 @@ def read_trip_position(
 ):
     trips = db.get_data_trips(trip_id)
     if isinstance(trips,str):
+        logging.warning(f"API function: read_trip_position, Error: The trip is no exist.")
         return Response(status_code=status.HTTP_404_NOT_FOUND)
     position = trips[0]['position']
     req = {
         'position': position if position is not None else '', 
     }
+    logging.info(f"API function: read_trip_position, Return: {req}")
     return req
 
 @router.get(
@@ -50,6 +52,7 @@ def read_reserved_trip_info(
     res = []
     trip_for_user = db.get_data_passengers_userid(user.user_id)
     if isinstance(trip_for_user,str):
+        logging.info(f"API function: read_reserved_trip_info, Return: {res}")
         return res
     for trip in trip_for_user:
         trip_info = db.get_data_trips(trip['trip_id'])[0]
@@ -70,8 +73,8 @@ def read_reserved_trip_info(
             'payment' : trip['cost'],
             'available_seats' : trip_info['available_seats'],
         }
-       
         res.append(single_trip)
+    logging.info(f"API function: read_reserved_trip_info, Return: {res}")
     return res
 
 
@@ -91,8 +94,10 @@ def reserve_trip(
 ):
     trip_status = db.get_data_trips(query.trip_id)
     if trip_status[0]['available_seats'] <= 0:
+        logging.warning(f"API function: reserve_trip, Error: The trip has no available seats.")
         return Response(status_code=status.HTTP_409_CONFLICT)
     if isinstance(trip_status,str):
+        logging.warning(f"API function: reserve_trip, Error: There is no such trip.")
         return Response(status_code=status.HTTP_404_NOT_FOUND)
     first_location = db.get_data_locationsid(query.trip_id,query.departure) 
     last_location = db.get_data_locationsid(query.trip_id,query.destination)
@@ -111,6 +116,8 @@ def reserve_trip(
             'available_seats' : trip['available_seats']
         }
         db.update_data_trips(trip['trip_id'],dic)
+    logging.info(f"API function: reserve_trip, Reserve trip_id:{query.trip_id}, departure: {query.departure}, destination: {query.destination}\
+                  Success !")
     return Response(status_code=status.HTTP_201_CREATED)
 
 
@@ -129,5 +136,7 @@ def remove_reserved_trip(
 
     delete_info = db.delete_data_passengers_by_trip_user_id(trip_id, user.user_id)
     if delete_info != "SUCCESS":
+        logging.warning(f"API function: remove_reserved_trip, Remove trip_id: {trip_id} Fail")
         return Response(status_code=status.HTTP_404_NOT_FOUND)
+    logging.info(f"API function: remove_reserved_trip, Remove trip_id: {trip_id} Success")
     return Response(status_code=status.HTTP_200_OK)

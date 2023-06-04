@@ -2,6 +2,7 @@ from typing import Annotated, List
 from datetime import datetime , timedelta
 from fastapi import APIRouter, Depends, HTTPException, status, Response
 from pydantic import BaseModel
+import logging
 
 from ..models.user import UserIn
 from ..models.trip import FullTrip, PosTime, NewTrip
@@ -36,7 +37,7 @@ def read_trip_info(
     if isinstance(ret,str):
         return trips
     for trip in ret:
-        print(trip)
+        # print(trip)
         single_trip = {
             'trip_id': trip['trip_id'],
             'driver_name': user.username,
@@ -51,7 +52,9 @@ def read_trip_info(
             }
         }
         trips.append(single_trip)
-    return sorted(trips,key=lambda x:x['trip_id'])
+    trips = sorted(trips,key=lambda x:x['trip_id'])
+    logging.info(f"API function: read_trip_info ,Return {trips}")
+    return trips
 
 class ReservedLocation(BaseModel):
     point: PosTime
@@ -74,6 +77,7 @@ def read_reserved_trip_info(
 ):
     locations = db.get_data_locations(trip_id)
     if isinstance(locations,str):
+        logging.warning(f"API function: read_reserved_trip_info ,Error:  There is no such trip.")
         return Response(status_code=status.HTTP_404_NOT_FOUND)
     passengers = db.get_data_passengers(trip_id)
 
@@ -97,11 +101,12 @@ def read_reserved_trip_info(
             if passenger['destination'] == location['name']:
                 dic["Alighting"].append(data['username'])
         info.append(dic)
+    logging.info(f"API function: read_reserved_trip_info ,Return {info}")
     return info
 @router.put(
     "/trip/position",
     responses = {
-        status.HTTP_404_NOT_FOUND: {"description": "The trip is no exist"},
+        status.HTTP_404_NOT_FOUND: {"description": "The trip is no exist."},
     }
 )
 def update_trip_position(
@@ -115,17 +120,20 @@ def update_trip_position(
     }
 
     if db.update_data_trips(trip_id,req) != 'SUCCESS':
+        logging.info(f"API function: update_trip_position ,Error: The trip is no exist.")  
         return Response(status_code=status.HTTP_404_NOT_FOUND)
+    logging.info(f"API function: update_trip_position ,Return 200")
+    
     return Response(status_code=status.HTTP_200_OK)
     
 @router.post(
     "/trip",
     status_code=status.HTTP_201_CREATED,
     responses={
-        status.HTTP_201_CREATED: {"description": "new trip is created"},
-        status.HTTP_500_INTERNAL_SERVER_ERROR: {"description": "API or Database Server Error"},
-        status.HTTP_406_NOT_ACCEPTABLE: {"description": "Invalid parameters"},
-        status.HTTP_405_METHOD_NOT_ALLOWED: {"description": "USER_ID or BOARDING_TIME already exists"}
+        status.HTTP_201_CREATED: {"description": "New trip is created."},
+        status.HTTP_500_INTERNAL_SERVER_ERROR: {"description": "API or Database Server Error."},
+        status.HTTP_406_NOT_ACCEPTABLE: {"description": "Invalid parameters."},
+        status.HTTP_405_METHOD_NOT_ALLOWED: {"description": "USER_ID or BOARDING_TIME already exists."}
     }
 )
 def new_trip(
@@ -139,9 +147,11 @@ def new_trip(
         'boarding_time' : query.boarding_time
     }
     if query.path == [] or '' in query.path:
+        logging.warning(f"API function: new_trip, Error: Invalid parameters.")
         return Response(status_code=status.HTTP_406_NOT_ACCEPTABLE)
     res = db.insert_data_trips(req)
     if not isinstance(res,str):
+        logging.warning(f"API function: new_trip, Error: USER_ID or BOARDING_TIME already exists.")
         return Response(status_code=status.HTTP_405_METHOD_NOT_ALLOWED)
     trip_id = db.get_data_tripid(req)
     for idx,p in enumerate(query.path):
@@ -160,9 +170,9 @@ def new_trip(
         'destination' : last_location['name'],
         'alighting_time' : last_location['time'],
     }
-    print(dict)
+    # print(dict)
     db.update_data_trips(trip_id['trip_id'],dic)
-
+    logging.info(f"API function: new_trip, Update trip_id: {trip_id['trip_id']}, {dic}")
     return Response(status_code=status.HTTP_201_CREATED)
 
 
@@ -171,7 +181,7 @@ def new_trip(
     responses={
         status.HTTP_200_OK: {"content": None},
         status.HTTP_404_NOT_FOUND: {"description": "There is no such trip."},
-        status.HTTP_403_FORBIDDEN: {"description": "passenger or location remove error"}
+        status.HTTP_403_FORBIDDEN: {"description": "Passenger or location remove error."}
     }
 )
 def remove_trip(
@@ -182,8 +192,10 @@ def remove_trip(
 
     db.delete_data_passengers(trip_id)
     if db.delete_data_locations(trip_id) != "SUCCESS":
+        logging.warning(f"API function: remove_trip, Error: Passenger or location remove error.")
         return Response(status_code=status.HTTP_403_FORBIDDEN)
     if db.delete_data_trips(trip_id) != "SUCCESS":
+        logging.warning(f"API function: remove_trip, Error: There is no such trip.")
         return Response(status_code=status.HTTP_404_NOT_FOUND)
-     
+    logging.warning(f"API function: remove_trip, Remove trip_id: {trip_id} Success !")
     return Response(status_code=status.HTTP_200_OK)

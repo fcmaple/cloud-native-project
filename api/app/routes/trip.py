@@ -1,5 +1,5 @@
 from typing import Annotated, List
-import json
+import json,logging
 
 from fastapi import APIRouter, Depends, HTTPException, status
 
@@ -62,10 +62,11 @@ def search_trips(
                 single_trip['driver_name'] = _user_info['username']
                 res.append(single_trip)
         except:
+            logging.warning(f"API function: search_trips, Error: boarding_time invalid type")
             raise HTTPException(
                 status_code=status.HTTP_409_CONFLICT,
                 detail=f"boarding_time invalid type , ex: 2023-05-01T08:51:41")
-
+    logging.info(f"API function: search_trips ,Return {res}")
     return res
 
 
@@ -78,5 +79,5 @@ def get_maps(
 ):
     with open('app/map.json', 'r') as f:
         res = json.load(f)
-
+    logging.info(f"API function: get_maps ")
     return res

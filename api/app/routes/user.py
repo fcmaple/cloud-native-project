@@ -12,6 +12,7 @@ from ..config import settings
 from sqlalchemy.orm import Session
 from ..db.crud import get_db
 
+import logging
 router = APIRouter(
     prefix="/user",
     tags=["user"],
@@ -30,6 +31,7 @@ router = APIRouter(
 def read_user_info(
     userdata: Annotated[UserIn, Depends(get_current_user)],
 ):
+    logging.info(f"API function: read_user_info , return {userdata}")
     return userdata
 
 
@@ -53,7 +55,7 @@ def register_user(
     userdata.password = hashing_password(userdata.password)
     user = userdata.dict()
     db.insert_data_users(user)
-
+    logging.info(f"API function: register_user ,userdata :{userdata}")
     return Response(status_code=status.HTTP_201_CREATED)
 
 
@@ -70,6 +72,7 @@ def login_for_access_token(
 ):
     user = authenticate_user(form_data.username, form_data.password,db)
     if not user:
+        logging.warning("API function: login_for_access_token ,error: Incorrect username or password")
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Incorrect username or password",
@@ -78,4 +81,7 @@ def login_for_access_token(
     access_token = create_access_token(
         data={"sub": user.username}, expires_delta=timedelta(minutes=settings.ACCESS_TOKEN_EXPIRE_MINUTES)
     )
-    return {"access_token": access_token, "token_type": "bearer"}
+    
+    res = {"access_token": access_token, "token_type": "bearer"}
+    logging.info(f"API function: login_for_access_token ,Return {res}")
+    return res
