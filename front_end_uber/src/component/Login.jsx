@@ -179,7 +179,7 @@ const Login = (props) => {
       
       if(isUsername && isPwd &&  isRole){
         setIsLogIn(true)
-        const key= getGkey()
+        const gkey = getGkey()
         const apijson = await api({
             cmd: "user/login",
             method: 'POST',
