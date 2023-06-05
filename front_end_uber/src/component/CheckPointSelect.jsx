@@ -18,7 +18,7 @@ const useStyles = makeStyles((theme) => ({
 
 const CheckPointSelect = (props) => {
     const classes = useStyles();
-    const { checkPointList } = props
+    const { checkPointList, changeTargetList, id } = props
 
     const [targetCheckPoint, setTargetCheckPoint] = useState("")
 
@@ -27,6 +27,7 @@ const CheckPointSelect = (props) => {
     }, [props.value])
 
     const handleChange = (event) => {
+        changeTargetList(id, event.target.value);
         setTargetCheckPoint(event.target.value);
     };
 

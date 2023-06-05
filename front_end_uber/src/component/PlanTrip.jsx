@@ -78,10 +78,6 @@ const PlanTrip = (props) => {
     const [numSeat, setNumSeat] = useState(0);
     const [targetList, setTargetList] = useState([]); // 選好的 check point
 
-    // useEffect(()=>{
-    //     if(checkPointList.length==0) onGetCheckTrip()
-    // }, [checkPointList])
-
     const onSetStartAddr = (addr) => { setStartAddr(addr)}
     const onSetDstAddr = (addr) => { setDstAddr(addr)}
 
@@ -89,6 +85,12 @@ const PlanTrip = (props) => {
         const firstArr = targetList.slice(0, idx);
         const secondArr = targetList.slice(idx + 1);
         setTargetList([...firstArr, ...secondArr])
+    }
+
+    const changeTargetList = (idx, value) => {
+        let tmp = targetList
+        tmp[idx] = value
+        setTargetList(tmp)
     }
 
     const handleChange = (event) => {
@@ -192,7 +194,7 @@ const PlanTrip = (props) => {
                         targetList && targetList.map((t, id)=>{
                             return(
                                 <div key={id} style={{display:"flex", flexDirection:"row", marginTop:"0", alignItems:"flex-end"}}>
-                                    <CheckPointSelect value={t} checkPointList={checkPointList}></CheckPointSelect>
+                                    <CheckPointSelect id={id} value={t} checkPointList={checkPointList} changeTargetList={changeTargetList}></CheckPointSelect>
                                     <RxCross2  className={classes.margin} color="#FF5733" onClick={()=>onRemoveTarget(id)}/>
                                 </div>
                                 )
