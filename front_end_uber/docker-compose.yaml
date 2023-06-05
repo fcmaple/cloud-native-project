@@ -1,0 +1,7 @@
+version: '3'
+services:
+  web:
+    image: web:v0.0.1
+    restart: always
+    ports:
+      - "8080:80"
