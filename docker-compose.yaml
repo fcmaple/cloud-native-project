@@ -19,6 +19,16 @@ services:
       - db_volume:/var/lib/postgresql/data
     ports:
       - "5432:5432"
+  web:
+    image: wnlab/uber-web:v0.0.1
+    restart: unless-stopped
+    container_name: react_web
+    networks:
+      - cloud-native
+    volumes:
+      - ./config.json:/usr/share/nginx/html
+    ports:
+      - "8080:80"
 volumes:
   db_volume:
 networks:
