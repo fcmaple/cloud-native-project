@@ -156,7 +156,7 @@ function BasicTextFields(props) {
 }
 
 const Login = (props) => {
-  const { onChangeRole } = props
+  const { onChangeRole, getGkey,setIsLogIn} = props
 
   const onSubmit = async (formdata) => {
       const {onSetAccessToke} = props
@@ -176,7 +176,10 @@ const Login = (props) => {
       if(role == "" || role == null) alert("忘了選 登入身份");
       else isRole = true;
 
+      
       if(isUsername && isPwd &&  isRole){
+        setIsLogIn(true)
+        const key= getGkey()
         const apijson = await api({
             cmd: "user/login",
             method: 'POST',

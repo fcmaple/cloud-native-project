@@ -274,7 +274,7 @@ const Driver = (props) => {
           onLogout={onLogout}
         />
         <div>
-          <GoogleMap/>
+          {props.gkey!="" && <GoogleMap gkey={props.gkey}/>}
           <div></div>
         </div>
       </div>

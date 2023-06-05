@@ -4,10 +4,12 @@ import 'regenerator-runtime/runtime'
 // import apiurl from '../../public/config.js'
 
 let apiurl;
+let key;
 
 axios.get('./config.json').then(res => {
 	if (res.status === 200) {
 		apiurl = res.data.apiurl
+		key = res.data.key
 	}
   })
 
@@ -19,6 +21,7 @@ export default function ({
 	data = {},
 	header = {},
 	fileList = [],
+	getKey = false
 }) {
 	method = method.toUpperCase()
 	type = type.toLowerCase()
@@ -41,6 +44,12 @@ export default function ({
 			option.params = data
 			break;
 	}
+	if(getKey) {
+		return{
+			ok: true,
+			status: 200,
+			body: key
+		}}
 	return axios({
 		method,
 		url,
