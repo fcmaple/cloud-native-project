@@ -1,5 +1,6 @@
 const path = require("path");
 const webpack = require("webpack");
+const CopyPlugin = require('copy-webpack-plugin');
 const TransferWebpackPlugin = require('transfer-webpack-plugin')
 module.exports = {
   entry: ["regenerator-runtime/runtime.js", "./src/index.jsx"],
@@ -27,9 +28,6 @@ module.exports = {
   },
   resolve: {
     extensions: ["*", ".js", ".jsx"],
-    alias: {
-      Config: __dirname + '/config.json'
-    }
   },
   output: {
     path: path.resolve(__dirname, "dist/"),
@@ -48,6 +46,8 @@ module.exports = {
     new TransferWebpackPlugin([{
       from: 'www'
     },], path.resolve(__dirname)),
-
+    new CopyPlugin([{
+        from: './src/lib/config.json',
+    }]),
   ]
 };
