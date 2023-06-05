@@ -47,15 +47,16 @@ def register_user(
     userdata: UserLogin,
     db: Annotated[Session,Depends(get_db)],
 ):
-    # if userdata.username in fake_users_db:
-    #     raise HTTPException(
-    #             status_code=status.HTTP_409_CONFLICT,
-    #             detail="User already exists")
 
     userdata.password = hashing_password(userdata.password)
     user = userdata.dict()
-    db.insert_data_users(user)
-    logging.info(f"API function: register_user ,userdata :{userdata}")
+    if db.insert_data_users(user) != 'SUCCESS':
+        logging.warning(f'API function: register_user ,userdate: {userdata}, Error: "User already exists"')
+        raise HTTPException(
+                status_code=status.HTTP_409_CONFLICT,
+                detail="User already exists")
+
+    logging.info(f"API function: register_user, userdate: {userdata}, Return: 200")
     return Response(status_code=status.HTTP_201_CREATED)
 
 
