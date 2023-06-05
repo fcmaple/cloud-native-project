@@ -2,18 +2,25 @@ version: '2'
 
 services:
   server:
-    image: fast:v0.2.2
+    image: wnlab/uber-api:v0.0.1
     container_name: fastapi_server
+    networks:
+      - cloud-native
     restart: always
     ports:
       - "8888:8888"
   db:
-    image: psqldb:v0.1.2
+    image: wnlab/uber-db:v0.0.1
     restart: unless-stopped
     container_name: cloud_postgresql
+    networks:
+      - cloud-native
     volumes:
       - db_volume:/var/lib/postgresql/data
     ports:
       - "5432:5432"
 volumes:
   db_volume:
+networks:
+  cloud-native:
+
