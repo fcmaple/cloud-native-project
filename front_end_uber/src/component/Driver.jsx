@@ -274,7 +274,7 @@ const Driver = (props) => {
           onLogout={onLogout}
         />
         <div>
-          {props.gkey!="" && <GoogleMap gkey={props.gkey}/>}
+          {props.gkey!="" && <GoogleMap gkey={props.gkey} checkPointList={checkPointList} zoom={13} center={{lat: 24.787075,lng: 120.997217}}/>}
           <div></div>
         </div>
       </div>
